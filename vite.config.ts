@@ -10,5 +10,5 @@ export default defineConfig({
   build: {
     outDir: 'docs'
   },
-  base: '/3DKitchen/',
+  base: '/Znew3DKitchen/',
 });
