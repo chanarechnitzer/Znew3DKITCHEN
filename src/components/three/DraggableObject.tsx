@@ -1,5 +1,6 @@
 import React from 'react';
 import { KitchenItemType } from '../../store/KitchenContext';
+import { useKitchen } from '../../store/KitchenContext';
 
 interface DraggableObjectProps {
   position: [number, number, number];
@@ -10,29 +11,54 @@ interface DraggableObjectProps {
     depth: number;
     height: number;
   };
+  rotation?: number;
+  stackedOn?: string; // ID of item this is stacked on
+  stackedWith?: string; // ID of item stacked on this
 }
 
 const DraggableObject: React.FC<DraggableObjectProps> = ({ 
   position, 
   type, 
   isPlaced, 
-  dimensions 
+  dimensions,
+  rotation = 0,
+  stackedOn,
+  stackedWith
 }) => {
-  // Function to get color based on type
-  const getColor = () => {
-    switch (type) {
-      case KitchenItemType.SINK:
-        return '#60a5fa'; // Blue for sink
-      case KitchenItemType.STOVE:
-        return '#f87171'; // Red for stove
-      case KitchenItemType.OVEN:
-        return '#fb923c'; // Orange for oven
-      case KitchenItemType.REFRIGERATOR:
-        return '#93c5fd'; // Light blue for refrigerator
-      case KitchenItemType.COUNTERTOP:
-        return '#a3a3a3'; // Gray for countertop
+  const { customization } = useKitchen();
+
+  // ✅ FIXED: Calculate correct Y position for stacked ovens
+  const yPosition = stackedOn ? 0.6 : 0; // If stacked, place at height of base oven (0.6m)
+
+  // Get cabinet color based on customization
+  const getCabinetColor = () => {
+    switch (customization.cabinets) {
+      case 'white':
+        return '#ffffff';
+      case 'wood':
+        return '#8B4513';
+      case 'gray':
+        return '#6B7280';
+      case 'navy':
+        return '#1E3A8A';
       default:
-        return '#d4d4d4';
+        return '#ffffff';
+    }
+  };
+
+  // Get countertop color based on customization
+  const getCountertopColor = () => {
+    switch (customization.countertops) {
+      case 'granite':
+        return '#2D3748';
+      case 'marble':
+        return '#F7FAFC';
+      case 'quartz':
+        return '#4A5568';
+      case 'wood':
+        return '#8B4513';
+      default:
+        return '#2D3748';
     }
   };
 
@@ -40,28 +66,138 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   const renderObject = () => {
     const baseHeight = dimensions.height;
     const opacity = isPlaced ? 1 : 0.7;
+    const cabinetColor = getCabinetColor();
+    const countertopColor = getCountertopColor();
     
     switch (type) {
       case KitchenItemType.SINK:
         return (
           <group>
-            {/* Sink base */}
+            {/* Sink base - uses cabinet customization */}
             <mesh 
-              position={[0, baseHeight / 2, 0]} 
+              position={[0, (baseHeight - 0.05) / 2, 0]} 
               castShadow 
               receiveShadow
             >
-              <boxGeometry args={[dimensions.width, baseHeight, dimensions.depth]} />
-              <meshStandardMaterial color="#a3a3a3" transparent opacity={opacity} />
+              <boxGeometry args={[dimensions.width, baseHeight - 0.05, dimensions.depth]} />
+              <meshStandardMaterial color={cabinetColor} transparent opacity={opacity} />
             </mesh>
             
-            {/* Sink */}
+            {/* Countertop surface */}
             <mesh 
-              position={[0, baseHeight - 0.05, 0]} 
+              position={[0, baseHeight, 0]} 
               castShadow
             >
-              <boxGeometry args={[dimensions.width - 0.1, 0.1, dimensions.depth - 0.1]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <boxGeometry args={[dimensions.width, 0.05, dimensions.depth]} />
+              <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
+            </mesh>
+            
+            {/* IMPROVED: Realistic sink bowl with proper stainless steel finish */}
+            <mesh 
+              position={[0, baseHeight - 0.03, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[dimensions.width * 0.35, dimensions.width * 0.3, 0.12, 20]} />
+              <meshStandardMaterial 
+                color="#c0c0c0" 
+                metalness={0.9} 
+                roughness={0.15} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* IMPROVED: Sink interior - darker stainless steel with better depth */}
+            <mesh 
+              position={[0, baseHeight + 0.03, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[dimensions.width * 0.32, dimensions.width * 0.27, 0.08, 20]} />
+              <meshStandardMaterial 
+                color="#a8a8a8" 
+                metalness={0.95} 
+                roughness={0.1} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* NEW: Sink drain - realistic detail */}
+            <mesh 
+              position={[0, baseHeight, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[0.03, 0.025, 0.02, 12]} />
+              <meshStandardMaterial 
+                color="#808080" 
+                metalness={0.9} 
+                roughness={0.2} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* IMPROVED: Faucet base - more realistic chrome finish */}
+            <mesh 
+              position={[0, baseHeight + 0.13, -dimensions.depth * 0.3]} 
+              castShadow
+            >
+              <cylinderGeometry args={[0.04, 0.05, 0.12, 12]} />
+              <meshStandardMaterial 
+                color="#f0f0f0" 
+                metalness={0.95} 
+                roughness={0.05} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* IMPROVED: Faucet spout - curved and realistic */}
+            <mesh 
+              position={[0, baseHeight + 0.23, -dimensions.depth * 0.15]} 
+              castShadow
+              rotation={[Math.PI / 6, 0, 0]}
+            >
+              <cylinderGeometry args={[0.02, 0.025, 0.25, 12]} />
+              <meshStandardMaterial 
+                color="#f0f0f0" 
+                metalness={0.95} 
+                roughness={0.05} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* NEW: Faucet handle - realistic detail */}
+            <mesh 
+              position={[0.08, baseHeight + 0.20, -dimensions.depth * 0.3]} 
+              castShadow
+            >
+              <cylinderGeometry args={[0.015, 0.02, 0.06, 8]} />
+              <meshStandardMaterial 
+                color="#e0e0e0" 
+                metalness={0.8} 
+                roughness={0.1} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* Cabinet handles */}
+            <mesh 
+              position={[0, (baseHeight - 0.05) * 0.3, dimensions.depth / 2 + 0.01]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
+              <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
+            </mesh>
+            
+            <mesh 
+              position={[0, (baseHeight - 0.05) * 0.6, dimensions.depth / 2 + 0.01]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
+              <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
             </mesh>
           </group>
         );
@@ -94,7 +230,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               castShadow
             >
               <cylinderGeometry args={[0.08, 0.08, 0.02, 16]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <meshStandardMaterial color="#f87171" transparent opacity={opacity} />
             </mesh>
             
             <mesh 
@@ -102,7 +238,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               castShadow
             >
               <cylinderGeometry args={[0.08, 0.08, 0.02, 16]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <meshStandardMaterial color="#f87171" transparent opacity={opacity} />
             </mesh>
             
             <mesh 
@@ -110,7 +246,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               castShadow
             >
               <cylinderGeometry args={[0.08, 0.08, 0.02, 16]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <meshStandardMaterial color="#f87171" transparent opacity={opacity} />
             </mesh>
             
             <mesh 
@@ -118,7 +254,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               castShadow
             >
               <cylinderGeometry args={[0.08, 0.08, 0.02, 16]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <meshStandardMaterial color="#f87171" transparent opacity={opacity} />
             </mesh>
           </group>
         );
@@ -126,9 +262,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.OVEN:
         return (
           <group>
-            {/* Oven body */}
+            {/* Oven body - positioned correctly for stacking */}
             <mesh 
-              position={[0, baseHeight / 2, 0]} 
+              position={[0, yPosition + baseHeight / 2, 0]}
               castShadow 
               receiveShadow
             >
@@ -138,20 +274,42 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* Oven door */}
             <mesh 
-              position={[0, baseHeight / 2, dimensions.depth / 2 + 0.01]} 
+              position={[0, yPosition + baseHeight / 2, dimensions.depth / 2 + 0.01]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width - 0.1, baseHeight - 0.1, 0.02]} />
               <meshStandardMaterial color="#111827" transparent opacity={opacity} />
             </mesh>
             
+            {/* Oven window */}
+            <mesh 
+              position={[0, yPosition + baseHeight * 0.6, dimensions.depth / 2 + 0.02]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width - 0.2, baseHeight * 0.4, 0.01]} />
+              <meshStandardMaterial 
+                color="#333333" 
+                transparent 
+                opacity={opacity * 0.8} 
+              />
+            </mesh>
+            
             {/* Oven handle */}
             <mesh 
-              position={[0, baseHeight / 2, dimensions.depth / 2 + 0.03]} 
+              position={[0, yPosition + baseHeight * 0.3, dimensions.depth / 2 + 0.03]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width - 0.3, 0.05, 0.02]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <meshStandardMaterial color="#fb923c" transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Control panel */}
+            <mesh 
+              position={[0, yPosition + baseHeight - 0.05, dimensions.depth / 2 + 0.02]}
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width - 0.1, 0.08, 0.01]} />
+              <meshStandardMaterial color="#374151" transparent opacity={opacity} />
             </mesh>
           </group>
         );
@@ -184,7 +342,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               castShadow
             >
               <boxGeometry args={[0.05, baseHeight * 0.4, 0.03]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <meshStandardMaterial color="#93c5fd" transparent opacity={opacity} />
             </mesh>
             
             <mesh 
@@ -192,7 +350,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               castShadow
             >
               <boxGeometry args={[0.05, baseHeight * 0.3, 0.03]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+              <meshStandardMaterial color="#93c5fd" transparent opacity={opacity} />
             </mesh>
           </group>
         );
@@ -200,23 +358,23 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.COUNTERTOP:
         return (
           <group>
-            {/* Countertop base */}
+            {/* Countertop base - uses cabinet customization */}
             <mesh 
               position={[0, baseHeight / 2, 0]} 
               castShadow 
               receiveShadow
             >
               <boxGeometry args={[dimensions.width, baseHeight, dimensions.depth]} />
-              <meshStandardMaterial color="#a3a3a3" transparent opacity={opacity} />
+              <meshStandardMaterial color={cabinetColor} transparent opacity={opacity} />
             </mesh>
             
-            {/* Countertop surface */}
+            {/* Countertop surface - uses countertop customization */}
             <mesh 
               position={[0, baseHeight, 0]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width, 0.05, dimensions.depth]} />
-              <meshStandardMaterial color="#f3f4f6" transparent opacity={opacity} />
+              <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
             </mesh>
             
             {/* Drawer handles */}
@@ -246,14 +404,14 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             receiveShadow
           >
             <boxGeometry args={[dimensions.width, baseHeight, dimensions.depth]} />
-            <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+            <meshStandardMaterial color="#d4d4d4" transparent opacity={opacity} />
           </mesh>
         );
     }
   };
   
   return (
-    <group position={position}>
+    <group position={position} rotation={[0, rotation, 0]}>
       {renderObject()}
     </group>
   );

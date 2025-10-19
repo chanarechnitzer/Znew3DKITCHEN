@@ -8,7 +8,8 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   build: {
-    outDir: 'docs'
+    outDir: 'docs',
+    emptyOutDir: true
   },
   base: '/Znew3DKITCHEN/',
 });
