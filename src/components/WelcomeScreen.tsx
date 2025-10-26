@@ -88,7 +88,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
             <span>בואו נתחיל לעצב!</span>
             <ArrowLeft className="group-hover:translate-x-1 transition-transform duration-300" size={18} />
           </button>
-          <p className="text-gray-500 mt-2 text-sm">חינם לחלוטין • ללא הרשמה</p>
+          <p className="text-gray-500 mt-2 text-sm">פותח על ידי SMARTOFFICE | 0527668902</p>
         </div>
       </div>
     </div>
