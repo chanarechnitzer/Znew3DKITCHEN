@@ -370,36 +370,57 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
     const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);
     const refrigerator = placedItems.find(item => item.type === KitchenItemType.REFRIGERATOR);
-    
+
     // Check if all required components are present
     const hasRequiredComponents = sinks.length > 0 && stove && refrigerator;
-    
+
     // Only proceed with validation if all components are present
     if (hasRequiredComponents) {
-      const distances: { [key: string]: number } = {};
-      
-      // Calculate distances between components
-      const primarySink = sinks[0]; // Use the first sink for primary measurements
-      const sinkToStove = calculateDistance(primarySink.position, stove.position);
-      const sinkToRefrigerator = calculateDistance(primarySink.position, refrigerator.position);
+      // NEW LOGIC: Check if at least ONE sink forms a valid triangle
+      let validTriangleFound = false;
+      let primarySink = sinks[0];
+      let primarySinkToStove = 0;
+      let primarySinkToRefrigerator = 0;
+
+      // Try each sink to see if it forms a valid triangle
+      for (const sink of sinks) {
+        const sinkToStove = calculateDistance(sink.position, stove.position);
+        const sinkToRefrigerator = calculateDistance(sink.position, refrigerator.position);
+        const stoveToRefrigerator = calculateDistance(stove.position, refrigerator.position);
+
+        // Check if THIS sink forms a valid triangle
+        const isSinkValid =
+          sinkToStove > 1.2 && sinkToStove < 5 &&
+          sinkToRefrigerator > 1.2 && sinkToRefrigerator < 5 &&
+          stoveToRefrigerator > 1.2 && stoveToRefrigerator < 5;
+
+        if (isSinkValid) {
+          validTriangleFound = true;
+          primarySink = sink;
+          primarySinkToStove = sinkToStove;
+          primarySinkToRefrigerator = sinkToRefrigerator;
+          break; // Found a valid triangle, no need to check other sinks
+        }
+      }
+
+      // Use the primary (first valid) sink for measurements
+      const sinkToStove = primarySinkToStove || calculateDistance(primarySink.position, stove.position);
+      const sinkToRefrigerator = primarySinkToRefrigerator || calculateDistance(primarySink.position, refrigerator.position);
       const stoveToRefrigerator = calculateDistance(stove.position, refrigerator.position);
-      
-      distances['כיור - כיריים'] = sinkToStove;
-      distances['כיור - מקרר'] = sinkToRefrigerator;
-      distances['כיריים - מקרר'] = stoveToRefrigerator;
-      
-      // Check additional sinks if present
-      sinks.slice(1).forEach((sink, index) => {
-        const additionalSinkToStove = calculateDistance(sink.position, stove.position);
-        const additionalSinkToRefrigerator = calculateDistance(sink.position, refrigerator.position);
-        
-        distances[`כיור ${index + 2} - כיריים`] = additionalSinkToStove;
-        distances[`כיור ${index + 2} - מקרר`] = additionalSinkToRefrigerator;
-      });
-      
+
+      // Build distances only for the primary triangle
+      const distances: { [key: string]: number } = {
+        'כיור - כיריים': sinkToStove,
+        'כיור - מקרר': sinkToRefrigerator,
+        'כיריים - מקרר': stoveToRefrigerator,
+      };
+
+      // Validate only the primary triangle distances
       const violations = validateDistances(distances);
-      const isValid = violations.length === 0;
-      
+
+      // Triangle is valid if at least one sink forms a valid triangle
+      const isValid = validTriangleFound;
+
       const validation = {
         isValid,
         sides: {
@@ -407,10 +428,10 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
           sinkToRefrigerator,
           stoveToRefrigerator,
         },
-        violations,
+        violations: isValid ? [] : violations, // No violations if valid triangle found
         isComplete: true
       };
-      
+
       setTriangleValidation(validation);
       // CRITICAL: NEVER auto-complete the game here!
       // Game completion is ONLY controlled by user clicking the finish button
