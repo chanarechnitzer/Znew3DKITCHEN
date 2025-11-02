@@ -132,8 +132,14 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
     const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
-    // Check item snapping first
-    if (!snapped) {
+    // Check if this is a corner placement - corners take priority for countertops
+    const isCornerPlacement = (isNearLeftWall || isNearRightWall) && (isNearBackWall || isNearFrontWall);
+
+    // For countertops in corners, skip item snapping and go straight to corner snapping
+    const shouldCheckItemSnapping = !(selectedItem.type === 'countertop' && isCornerPlacement);
+
+    // Check item snapping first (unless it's a countertop in a corner)
+    if (!snapped && shouldCheckItemSnapping) {
       for (const placedItem of placedItems) {
         // Skip self if editing existing item
         if (placedItem.id === selectedItem.id) continue;
