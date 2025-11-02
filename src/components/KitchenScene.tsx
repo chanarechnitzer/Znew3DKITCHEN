@@ -110,11 +110,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
 
-    // For countertops, no snapping at all - place exactly where user chose
-    if (selectedItem.type === 'countertop') {
-      return null;
-    }
-
     const snapDistance = 0.05; // Distance from walls
     const itemSnapDistance = 0.01; // Distance for item snapping
     const snapThreshold = 0.5; // Threshold for easier snapping
