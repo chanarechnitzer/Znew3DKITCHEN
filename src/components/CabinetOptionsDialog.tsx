@@ -103,41 +103,46 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     };
   };
 
-  const validateCabinetPlacement = (width: number) => {
+  const validateCabinetPlacement = (width: number, centerPos?: number, isRotated?: boolean) => {
     const wallMargin = 0.05;
-    const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
-    
+    const actualIsRotated = isRotated !== undefined ? isRotated : Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
+
+    // Use center position if provided (for fill mode), otherwise use current position
+    const checkPosX = centerPos !== undefined && !actualIsRotated ? centerPos : position.x;
+    const checkPosZ = centerPos !== undefined && actualIsRotated ? centerPos : position.z;
+    const checkPosition = new Vector3(checkPosX, position.y, checkPosZ);
+
     let minX, maxX, minZ, maxZ;
-    
-    if (isRotated) {
-      minX = position.x - 0.3;
-      maxX = position.x + 0.3;
-      minZ = position.z - width / 2;
-      maxZ = position.z + width / 2;
+
+    if (actualIsRotated) {
+      minX = checkPosX - 0.3;
+      maxX = checkPosX + 0.3;
+      minZ = checkPosZ - width / 2;
+      maxZ = checkPosZ + width / 2;
     } else {
-      minX = position.x - width / 2;
-      maxX = position.x + width / 2;
-      minZ = position.z - 0.3;
-      maxZ = position.z + 0.3;
+      minX = checkPosX - width / 2;
+      maxX = checkPosX + width / 2;
+      minZ = checkPosZ - 0.3;
+      maxZ = checkPosZ + 0.3;
     }
-    
+
     const kitchenMinX = -kitchenDimensions.width / 2 + wallMargin;
     const kitchenMaxX = kitchenDimensions.width / 2 - wallMargin;
     const kitchenMinZ = -kitchenDimensions.length / 2 + wallMargin;
     const kitchenMaxZ = kitchenDimensions.length / 2 - wallMargin;
-    
+
     if (minX < kitchenMinX || maxX > kitchenMaxX) {
       return { valid: false, reason: 'יוצא מגבולות המטבח (רוחב)' };
     }
     if (minZ < kitchenMinZ || maxZ > kitchenMaxZ) {
       return { valid: false, reason: 'יוצא מגבולות המטבח (אורך)' };
     }
-    
-    const collision = checkForCollisions(position, width);
+
+    const collision = checkForCollisions(checkPosition, width);
     if (collision) {
       return { valid: false, reason: `יתנגש עם ${collision.name}` };
     }
-    
+
     return { valid: true, reason: '' };
   };
 
@@ -155,6 +160,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const handleConfirm = () => {
     let newWidth = 0.6;
     let finalPosition = position;
+    let centerPos: number | undefined = undefined;
+    let isRotated: boolean | undefined = undefined;
 
     switch (selectedOption) {
       case 'keep':
@@ -165,6 +172,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         break;
       case 'fill':
         newWidth = fillData.width;
+        centerPos = fillData.centerPosition;
+        isRotated = fillData.isRotated;
         finalPosition = new Vector3(
           fillData.isRotated ? position.x : fillData.centerPosition,
           position.y,
@@ -173,7 +182,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         break;
     }
 
-    const validation = validateCabinetPlacement(newWidth);
+    const validation = validateCabinetPlacement(newWidth, centerPos, isRotated);
     if (!validation.valid) {
       alert(`לא ניתן למקם ארון: ${validation.reason}`);
       return;
@@ -194,7 +203,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   if (!isOpen) return null;
 
-  const fillValidation = validateCabinetPlacement(fillData.width);
+  const fillValidation = validateCabinetPlacement(fillData.width, fillData.centerPosition, fillData.isRotated);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
