@@ -117,7 +117,9 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const halfLength = kitchenDimensions.length / 2;
     const itemHalfWidth = selectedItem.dimensions.width / 2;
     const itemHalfDepth = selectedItem.dimensions.depth / 2;
-    const cornerThreshold = 0.8;
+
+    // For countertops, use smaller corner threshold so they stay exactly where placed
+    const cornerThreshold = selectedItem.type === 'countertop' ? 0.3 : 0.8;
 
     let snapX = x;
     let snapZ = z;
