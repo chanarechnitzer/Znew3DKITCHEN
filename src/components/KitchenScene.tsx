@@ -132,11 +132,11 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
     const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
-    // ✅ PRIORITY 1: For countertops, NO automatic wall snapping - place exactly where user drags
-    // Skip wall snapping for countertops entirely
+    // ✅ PRIORITY 1: For countertops, NO automatic snapping - place exactly where user drags
+    // Skip ALL snapping for countertops entirely
 
-    // ✅ PRIORITY 2: If not snapped to walls (or not a countertop), check item snapping
-    if (!snapped) {
+    // ✅ PRIORITY 2: If not snapped to walls and not a countertop, check item snapping
+    if (!snapped && selectedItem.type !== 'countertop') {
       for (const placedItem of placedItems) {
         // Skip self if editing existing item
         if (placedItem.id === selectedItem.id) continue;
