@@ -65,41 +65,41 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return nearLeftWall || nearRightWall || nearBackWall || nearFrontWall;
   };
 
-  // ✅ FIXED: Improved collision detection - NO collision warning when snapped to walls
+  // ✅ FIXED: Improved collision detection - NO collision warning when snapped to walls or items
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
-    
+
     // ✅ CRITICAL: If item is near a wall, don't check for collisions
     // Items against walls should never show collision warnings
     if (isNearWall(x, z)) {
       return null;
     }
-    
+
     // Calculate rotated dimensions
     const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
     const rotatedDepth = Math.abs(Math.sin(rotation)) * itemWidth + Math.abs(Math.cos(rotation)) * itemDepth;
-    
+
     const itemHalfWidth = rotatedWidth / 2;
     const itemHalfDepth = rotatedDepth / 2;
-    
+
     for (const placedItem of placedItems) {
       // Skip self if editing existing item
       if (placedItem.id === selectedItem.id) continue;
-      
+
       const placedRotation = placedItem.rotation || 0;
-      const placedRotatedWidth = Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.width + 
+      const placedRotatedWidth = Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.width +
                                  Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.depth;
-      const placedRotatedDepth = Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.width + 
+      const placedRotatedDepth = Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.width +
                                  Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.depth;
-      
+
       const placedHalfWidth = placedRotatedWidth / 2;
       const placedHalfDepth = placedRotatedDepth / 2;
-      
-      // ✅ FIXED: Much smaller buffer - only prevent actual overlap, allow touching
-      const buffer = 0.01; // Only 1cm buffer - allows items to be adjacent
+
+      // ✅ FIXED: NO buffer - allow items to touch perfectly with zero gap
+      const buffer = -0.001; // Negative buffer allows touching, only prevents actual overlap
       const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth + buffer);
       const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth + buffer);
-      
+
       if (xOverlap && zOverlap) {
         return placedItem.name; // Return the name of the colliding item
       }
@@ -111,7 +111,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     if (!selectedItem) return null;
 
     const snapDistance = 0.05; // Distance from walls
-    const itemSnapDistance = 0.01; // Distance for item snapping
+    const itemSnapDistance = 0.0; // NO GAP between items - snap directly
     const snapThreshold = 0.5; // Threshold for easier snapping
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;

@@ -25,15 +25,17 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
     const cabinetHalfWidth = width / 2;
     const cabinetHalfDepth = depth / 2;
-    const buffer = 0.01;
-    
+    const buffer = -0.001; // Negative buffer allows touching, only prevents actual overlap
+
     for (const item of placedItems) {
+      if (item.id === cabinetId) continue; // Skip self
+
       const itemHalfWidth = item.dimensions.width / 2;
       const itemHalfDepth = item.dimensions.depth / 2;
-      
+
       const xOverlap = Math.abs(cabinetPos.x - item.position.x) < (cabinetHalfWidth + itemHalfWidth + buffer);
       const zOverlap = Math.abs(cabinetPos.z - item.position.z) < (cabinetHalfDepth + itemHalfDepth + buffer);
-      
+
       if (xOverlap && zOverlap) {
         return item;
       }
@@ -43,7 +45,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.02;
 
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
 
@@ -59,9 +60,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
 
           if (itemEdge < position.z) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize);
           } else if (itemEdge > position.z) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize);
           }
         }
       }
@@ -75,9 +76,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
 
           if (itemEdge < position.x) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize);
           } else if (itemEdge > position.x) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize);
           }
         }
       }
