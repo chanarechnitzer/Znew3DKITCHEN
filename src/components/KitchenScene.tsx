@@ -132,69 +132,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
     const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
-    // ✅ PRIORITY 1: For countertops, prioritize wall snapping even when near other items
-    if (selectedItem.type === 'countertop') {
-      // Corner snapping with rotation options
-      if (isNearLeftWall && isNearBackWall) {
-        snapX = -halfWidth + snapDistance + itemHalfWidth;
-        snapZ = -halfLength + snapDistance + itemHalfDepth;
-        rotation = itemRotation; // User controls rotation in corners
-        snapped = true;
-        snapType = '🔄 פינה שמאל-אחור';
-        setShowRotationHint(true);
-      } else if (isNearRightWall && isNearBackWall) {
-        snapX = halfWidth - snapDistance - itemHalfWidth;
-        snapZ = -halfLength + snapDistance + itemHalfDepth;
-        rotation = itemRotation; // User controls rotation in corners
-        snapped = true;
-        snapType = '🔄 פינה ימין-אחור';
-        setShowRotationHint(true);
-      } else if (isNearLeftWall && isNearFrontWall) {
-        snapX = -halfWidth + snapDistance + itemHalfWidth;
-        snapZ = halfLength - snapDistance - itemHalfDepth;
-        rotation = itemRotation; // User controls rotation in corners
-        snapped = true;
-        snapType = '🔄 פינה שמאל-קדמי';
-        setShowRotationHint(true);
-      } else if (isNearRightWall && isNearFrontWall) {
-        snapX = halfWidth - snapDistance - itemHalfWidth;
-        snapZ = halfLength - snapDistance - itemHalfDepth;
-        rotation = itemRotation; // User controls rotation in corners
-        snapped = true;
-        snapType = '🔄 פינה ימין-קדמי';
-        setShowRotationHint(true);
-      }
-      // Wall snapping (not corners) - snap to wall distance but keep user's position along the wall
-      else if (isNearLeftWall) {
-        snapX = -halfWidth + snapDistance + itemHalfWidth;
-        // Keep user's Z position (snapZ = z stays as is)
-        rotation = Math.PI / 2; // Face right (away from left wall)
-        snapped = true;
-        snapType = '🧲 קיר שמאל';
-        setShowRotationHint(false);
-      } else if (isNearRightWall) {
-        snapX = halfWidth - snapDistance - itemHalfWidth;
-        // Keep user's Z position (snapZ = z stays as is)
-        rotation = -Math.PI / 2; // Face left (away from right wall)
-        snapped = true;
-        snapType = '🧲 קיר ימין';
-        setShowRotationHint(false);
-      } else if (isNearBackWall) {
-        // Keep user's X position (snapX = x stays as is)
-        snapZ = -halfLength + snapDistance + itemHalfDepth;
-        rotation = 0; // Face forward (away from back wall)
-        snapped = true;
-        snapType = '🧲 קיר אחורי';
-        setShowRotationHint(false);
-      } else if (isNearFrontWall) {
-        // Keep user's X position (snapX = x stays as is)
-        snapZ = halfLength - snapDistance - itemHalfDepth;
-        rotation = Math.PI; // Face backward (away from front wall)
-        snapped = true;
-        snapType = '🧲 קיר קדמי';
-        setShowRotationHint(false);
-      }
-    }
+    // ✅ PRIORITY 1: For countertops, NO automatic wall snapping - place exactly where user drags
+    // Skip wall snapping for countertops entirely
 
     // ✅ PRIORITY 2: If not snapped to walls (or not a countertop), check item snapping
     if (!snapped) {
