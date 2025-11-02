@@ -118,7 +118,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const halfLength = kitchenDimensions.length / 2;
     const itemHalfWidth = selectedItem.dimensions.width / 2;
     const itemHalfDepth = selectedItem.dimensions.depth / 2;
-    const cornerThreshold = 0.8;
+    const cornerThreshold = 0.3; // Smaller threshold - only snap when very close to walls
 
     let snapX = x;
     let snapZ = z;
@@ -132,11 +132,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
     const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
-    // ✅ PRIORITY 1: For countertops, NO automatic snapping - place exactly where user drags
-    // Skip ALL snapping for countertops entirely
-
-    // ✅ PRIORITY 2: If not snapped to walls and not a countertop, check item snapping
-    if (!snapped && selectedItem.type !== 'countertop') {
+    // ✅ PRIORITY 1: Check item snapping for all items (when not near walls)
+    if (!snapped) {
       for (const placedItem of placedItems) {
         // Skip self if editing existing item
         if (placedItem.id === selectedItem.id) continue;
@@ -247,8 +244,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       }
     }
 
-    // ✅ PRIORITY 3: If still not snapped and not a countertop, check wall snapping for other items
-    if (!snapped && selectedItem.type !== 'countertop') {
+    // ✅ PRIORITY 2: If still not snapped, check wall snapping for all items
+    if (!snapped) {
       // Corner snapping with rotation options
       if (isNearLeftWall && isNearBackWall) {
         snapX = -halfWidth + snapDistance + itemHalfWidth;
