@@ -164,26 +164,30 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         snapType = '🔄 פינה ימין-קדמי';
         setShowRotationHint(true);
       }
-      // Wall snapping (not corners) - automatic rotation to face away from wall
+      // Wall snapping (not corners) - snap to wall distance but keep user's position along the wall
       else if (isNearLeftWall) {
         snapX = -halfWidth + snapDistance + itemHalfWidth;
+        // Keep user's Z position (snapZ = z stays as is)
         rotation = Math.PI / 2; // Face right (away from left wall)
         snapped = true;
         snapType = '🧲 קיר שמאל';
         setShowRotationHint(false);
       } else if (isNearRightWall) {
         snapX = halfWidth - snapDistance - itemHalfWidth;
+        // Keep user's Z position (snapZ = z stays as is)
         rotation = -Math.PI / 2; // Face left (away from right wall)
         snapped = true;
         snapType = '🧲 קיר ימין';
         setShowRotationHint(false);
       } else if (isNearBackWall) {
+        // Keep user's X position (snapX = x stays as is)
         snapZ = -halfLength + snapDistance + itemHalfDepth;
         rotation = 0; // Face forward (away from back wall)
         snapped = true;
         snapType = '🧲 קיר אחורי';
         setShowRotationHint(false);
       } else if (isNearFrontWall) {
+        // Keep user's X position (snapX = x stays as is)
         snapZ = halfLength - snapDistance - itemHalfDepth;
         rotation = Math.PI; // Face backward (away from front wall)
         snapped = true;
@@ -336,26 +340,30 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         snapType = '🔄 פינה ימין-קדמי';
         setShowRotationHint(true);
       }
-      // Wall snapping (not corners) - automatic rotation to face away from wall
+      // Wall snapping (not corners) - snap to wall distance but keep user's position along the wall
       else if (isNearLeftWall) {
         snapX = -halfWidth + snapDistance + itemHalfWidth;
+        // Keep user's Z position (snapZ = z stays as is)
         rotation = Math.PI / 2; // Face right (away from left wall)
         snapped = true;
         snapType = '🧲 קיר שמאל';
         setShowRotationHint(false);
       } else if (isNearRightWall) {
         snapX = halfWidth - snapDistance - itemHalfWidth;
+        // Keep user's Z position (snapZ = z stays as is)
         rotation = -Math.PI / 2; // Face left (away from right wall)
         snapped = true;
         snapType = '🧲 קיר ימין';
         setShowRotationHint(false);
       } else if (isNearBackWall) {
+        // Keep user's X position (snapX = x stays as is)
         snapZ = -halfLength + snapDistance + itemHalfDepth;
         rotation = 0; // Face forward (away from back wall)
         snapped = true;
         snapType = '🧲 קיר אחורי';
         setShowRotationHint(false);
       } else if (isNearFrontWall) {
+        // Keep user's X position (snapX = x stays as is)
         snapZ = halfLength - snapDistance - itemHalfDepth;
         rotation = Math.PI; // Face backward (away from front wall)
         snapped = true;
